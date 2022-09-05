@@ -81,7 +81,7 @@ stages:
           steps:
           - download: current
             artifact: drop
-          - task: AzureWebApp@1
+          - task: CmdLine@2
             displayName: 'Deploy the build to dev (fake)'
             inputs:
               script: 'dotnet run --configuration Release --no-build --project Tailspin.SpaceGame.Web'
