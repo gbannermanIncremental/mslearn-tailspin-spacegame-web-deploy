@@ -81,9 +81,11 @@ stages:
           steps:
           - download: current
             artifact: drop
-          - task: CmdLine@2
-            displayName: 'Deploy the build to dev (fake)'
+          - task: DotNetCoreCLI@2
+            displayName: 'Build the project - $(buildConfiguration)'
             inputs:
-              script: 'dotnet run --configuration Release --no-build --project Tailspin.SpaceGame.Web'
+               command: 'run'
+               arguments: '--no-build --configuration $(buildConfiguration)'
+               projects: '**/*.csproj'
 
 
