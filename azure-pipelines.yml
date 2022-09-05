@@ -81,11 +81,10 @@ stages:
           steps:
           - download: current
             artifact: drop
-          - task: DotNetCoreCLI@2
+          - task: CmdLine@2
             displayName: 'Build the project - $(buildConfiguration)'
             inputs:
-               command: 'run'
-               arguments: '--no-build --configuration $(buildConfiguration)'
-               projects: '**/*.csproj'
+               script: 'dotnet /home/vsts/work/1/drop/Tailspin.SpaceGame.Web.dll'
+
 
 
