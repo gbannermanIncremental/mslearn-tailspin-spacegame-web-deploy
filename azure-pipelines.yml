@@ -9,42 +9,91 @@ variables:
   buildConfiguration: 'Release'
   solution: '**/Tailspin.SpaceGame.Web.sln'
   project: '**/Tailspin.SpaceGame.Web.csproj'
+  testSolution: '**/Tailspin.SpaceGame.Web.UITests.sln'
+  testProject: '**/Tailspin.SpaceGame.Web.UITests.csproj'
  
-steps:
-- task: NuGetToolInstaller@1
-  name: 'NuGetToolInstaller'
-  displayName: 'NuGet tool installer'
+stages:
+- stage: 'Build app'
+  displayName: 'Build the web application'
+  jobs:
+  - job: 'Install dependencies'
+    displayName: 'Install the required dependencies'
+  
+    steps:
+    - task: NuGetToolInstaller@1
+      name: 'NuGetToolInstaller'
+      displayName: 'NuGet tool installer'
  
-- task: NuGetCommand@2
-  name: 'NuGetRestore'
-  displayName: 'NuGet restore packages'
-  inputs:
-    command: 'restore'
-    restoreSolution: '$(solution)'
-    feedsToUse: 'select'
+    - task: NuGetCommand@2
+      name: 'NuGetRestore'
+      displayName: 'NuGet restore packages'
+      inputs:
+        command: 'restore'
+        restoreSolution: '$(solution)'
+        feedsToUse: 'select'
+
+   - job: 'Build the project'
+     steps:
+    - task: DotNetCoreCLI@2
+      displayName: 'Build the project - $(buildConfiguration)'
+      inputs:
+        command: 'build'
+        arguments: '--no-restore --configuration $(buildConfiguration)'
+        projects: '$(project)'
+
+ - stage: 'Test'
+   displayName: 'Build and run the test project'
+   jobs:
+   - job: 'Install test dependencies'
+    steps:
+    - task: NuGetToolInstaller@1
+      name: 'NuGetToolInstaller'
+      displayName: 'NuGet tool installer'
  
-- task: DotNetCoreCLI@2
-  name: 'Tests'
-  displayName: 'Run tests'
-  inputs:
-    command: 'test'
-    projects: '$(solution)'
-    arguments: '--configuration $(BuildConfiguration)'
+    - task: NuGetCommand@2
+      name: 'NuGetRestore'
+      displayName: 'NuGet restore packages'
+      inputs:
+        command: 'restore'
+        restoreSolution: '$(testSolution)'
+        feedsToUse: 'select'
+
+   - job: 'Build the test project'
+     steps:
+    - task: DotNetCoreCLI@2
+      displayName: 'Build the project - $(buildConfiguration)'
+      inputs:
+        command: 'build'
+        arguments: '--no-restore --configuration $(buildConfiguration)'
+        projects: '$(testProject)'
+
+    - task: DotNetCoreCLI@2
+      name: 'Tests'
+      displayName: 'Run the build tests'
+      inputs:
+        command: 'test'
+        projects: '$(testSolution)'
+        arguments: '--configuration $(BuildConfiguration)'
  
-- task: DotNetCoreCLI@2
-  name: 'Publish'
-  displayName: 'Publish'
-  inputs:
-    command: 'publish'
-    publishWebProjects: false
-    projects: '$(project)'
-    arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
-    zipAfterPublish: false
+
+ - stage: 'Publish'
+   displayName: 'Publish the build artifact'
+   jobs:
+   - job: 'Run the dotnet publish command'
+    - task: DotNetCoreCLI@2
+      name: 'Publish'
+      displayName: 'Publish'
+      inputs:
+        command: 'publish'
+        publishWebProjects: false
+        projects: '$(project)'
+        arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+        zipAfterPublish: false
  
-- task: PublishBuildArtifacts@1
-  name: 'PublishBuildArtifacts'
-  displayName: 'Publish build artifacts'
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-    ArtifactName: 'AzureTestProject'
-    publishLocation: 'Container'
+    - task: PublishBuildArtifacts@1
+      name: 'PublishBuildArtifacts'
+      displayName: 'Publish build artifacts'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'AzureTestProject'
+        publishLocation: 'Container'
