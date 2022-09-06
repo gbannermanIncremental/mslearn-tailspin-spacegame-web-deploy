@@ -16,7 +16,7 @@ stages:
 - stage: 'Build'
   displayName: 'Build the web application'
   jobs:
-  - job: 'Install dependencies'
+  - job: "NugetInstall"
     displayName: 'Install the required dependencies'
   
     steps:
@@ -32,8 +32,8 @@ stages:
         restoreSolution: '$(solution)'
         feedsToUse: 'select'
 
-   - job: 'Build the project'
-     steps:
+  - job: 'BuildProject'
+    steps:
     - task: DotNetCoreCLI@2
       displayName: 'Build the project - $(buildConfiguration)'
       inputs:
@@ -41,10 +41,10 @@ stages:
         arguments: '--no-restore --configuration $(buildConfiguration)'
         projects: '$(project)'
 
- - stage: 'Test'
-   displayName: 'Build and run the test project'
-   jobs:
-   - job: 'Install test dependencies'
+- stage: 'Test'
+  displayName: 'Build and run the test project'
+  jobs:
+  - job: 'TestDependencies'
     steps:
     - task: NuGetToolInstaller@1
       name: 'NuGetToolInstaller'
@@ -58,8 +58,8 @@ stages:
         restoreSolution: '$(testSolution)'
         feedsToUse: 'select'
 
-   - job: 'Build the test project'
-     steps:
+  - job: 'BuildTestProject'
+    steps:
     - task: DotNetCoreCLI@2
       displayName: 'Build the project - $(buildConfiguration)'
       inputs:
@@ -76,10 +76,11 @@ stages:
         arguments: '--configuration $(BuildConfiguration)'
  
 
- - stage: 'Publish'
-   displayName: 'Publish the build artifact'
-   jobs:
-   - job: 'Run the dotnet publish command'
+- stage: 'Publish'
+  displayName: 'Publish the build artifact'
+  jobs:
+  - job: 'DotNetPublish'
+    steps:
     - task: DotNetCoreCLI@2
       name: 'Publish'
       displayName: 'Publish'
