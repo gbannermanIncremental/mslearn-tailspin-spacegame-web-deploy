@@ -42,6 +42,7 @@ stages:
         projects: '$(project)'
 
 - stage: 'Test'
+  dependsOn: 'Build'
   displayName: 'Build and run the test project'
   jobs:
   - job: 'TestDependencies'
@@ -74,9 +75,9 @@ stages:
         command: 'test'
         projects: '$(testSolution)'
         arguments: '--configuration $(BuildConfiguration)'
- 
-
+        
 - stage: 'Publish'
+  dependsOn: 'Test'
   displayName: 'Publish the build artifact'
   jobs:
   - job: 'DotNetPublish'
