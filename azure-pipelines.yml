@@ -1,90 +1,61 @@
 trigger:
-- '*'
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'windows-latest'
 
 variables:
   dotnetSdkVersion: '6.x'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+  solution: '**/Tailspin.SpaceGame.Web.sln'
+  project: '**/Tailspin.SpaceGame.Web.csproj'
 
-stages:
-- stage: 'Build'
-  displayName: 'Build the web application'
-  jobs: 
-  - job: 'Build'
-    displayName: 'Build job'
-    pool:
-      vmImage: 'ubuntu-20.04'
-      demands:
-      - npm
 
-    variables:
-      wwwrootDir: 'Tailspin.SpaceGame.Web/wwwroot'
-      dotnetSdkVersion: '6.x'
+steps:
+- task: NuGetToolInstaller@1
+  name: 'NuGetToolInstaller'
+  displayName: 'NuGet tool installer'
 
-    steps:
-    - task: UseDotNet@2
-      displayName: 'Use .NET SDK $(dotnetSdkVersion)'
+- task: NuGetCommand@2
+      name: 'NuGetRestore'
+      displayName: 'NuGet restore packages'
       inputs:
-        version: '$(dotnetSdkVersion)'
+          command: 'restore'
+          restoreSolution: '$(solution)'
+          feedsToUse: 'select'
 
-    - task: Npm@1
-      displayName: 'Run npm install'
+  # In our variables we set our buildConfiguration to release, so we can now use this in our task by calling $(BuildConfiguration).
+- task: DotNetCoreCLI@2
+      name: 'Tests'
+      displayName: 'Run tests'
       inputs:
-        verbose: false
+          command: 'test'
+          projects: '$(solution)'
+          arguments: '--configuration $(BuildConfiguration)'
 
-    - script: './node_modules/.bin/node-sass $(wwwrootDir) --output $(wwwrootDir)'
-      displayName: 'Compile Sass assets'
 
-    - task: gulp@1
-      displayName: 'Run gulp tasks'
-
-    - script: 'echo "$(Build.DefinitionName), $(Build.BuildId), $(Build.BuildNumber)" > buildinfo.txt'
-      displayName: 'Write build info'
-      workingDirectory: $(wwwrootDir)
-
-    - task: DotNetCoreCLI@2
-      displayName: 'Restore project dependencies'
+    #The --output parameter tells us where to deploy the application to.
+ - task: DotNetCoreCLI@2
+      name: 'Publish'
+      displayName: 'Publish'
       inputs:
-        command: 'restore'
-        projects: '**/*.csproj'
+          command: 'publish'
+          publishWebProjects: false
+          projects: '$(project)'
+          arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+          zipAfterPublish: false
 
-    - task: DotNetCoreCLI@2
-      displayName: 'Build the project - $(buildConfiguration)'
+
+    
+- task: PublishBuildArtifacts@1
+      name: 'PublishBuildArtifacts'
+      displayName: 'Publish build artifacts'
       inputs:
-        command: 'build'
-        arguments: '--no-restore --configuration $(buildConfiguration)'
-        projects: '**/*.csproj'
-
-    - task: DotNetCoreCLI@2
-      displayName: 'Publish the project - $(buildConfiguration)'
-      inputs:
-        command: 'publish'
-        projects: '$(System.DefaultWorkingDirectory)/**/Tailspin.SpaceGame.Web.csproj' 
-        publishWebProjects: false
-        arguments: '--no-build --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/$(buildConfiguration)'
-        zipAfterPublish: true
-
-    - publish: '$(Build.ArtifactStagingDirectory)'
-      artifact: drop
-
-- stage: 'Dev'
-  displayName: 'Deploy to the dev environment'
-  dependsOn: Build
-  jobs:
-  - deployment: Deploy
-    pool:
-      vmImage: 'ubuntu-20.04'
-    environment: dev
-    variables:
-    - group: Release
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - download: current
-            artifact: drop
-          - task: CmdLine@2
-            displayName: 'Build the project - $(buildConfiguration)'
-            inputs:
-               script: 'dotnet /home/vsts/work/1/drop/Tailspin.SpaceGame.Web.dll'
-
+          PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+          ArtifactName: 'AzureTestProject'
+          publishLocation: 'Container'
 
 
