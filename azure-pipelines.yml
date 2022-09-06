@@ -57,8 +57,6 @@ stages:
         restoreSolution: '$(testSolution)'
         feedsToUse: 'select'
 
-  - job: BuildTestProject
-    steps:
     - task: DotNetCoreCLI@2
       displayName: 'Build the project - $(buildConfiguration)'
       inputs:
