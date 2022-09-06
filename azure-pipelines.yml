@@ -13,7 +13,7 @@ variables:
   testProject: '**/Tailspin.SpaceGame.Web.UITests.csproj'
  
 stages:
-- stage: 'Build app'
+- stage: 'Build'
   displayName: 'Build the web application'
   jobs:
   - job: 'Install dependencies'
