@@ -32,9 +32,6 @@ stages:
         restoreSolution: '$(solution)'
         feedsToUse: 'select'
 
-  - job: BuildProject
-    dependsOn: Dependencies
-    steps:
     - task: DotNetCoreCLI@2
       displayName: 'Build the project - $(buildConfiguration)'
       inputs:
