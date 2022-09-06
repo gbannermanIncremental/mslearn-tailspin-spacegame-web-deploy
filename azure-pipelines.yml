@@ -1,61 +1,50 @@
 trigger:
-  branches:
-    include:
-      - main
-
+- none
+ 
 pool:
   vmImage: 'windows-latest'
-
+ 
 variables:
-  dotnetSdkVersion: '6.x'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
   solution: '**/Tailspin.SpaceGame.Web.sln'
   project: '**/Tailspin.SpaceGame.Web.csproj'
-
-
+ 
 steps:
 - task: NuGetToolInstaller@1
   name: 'NuGetToolInstaller'
   displayName: 'NuGet tool installer'
-
+ 
 - task: NuGetCommand@2
-      name: 'NuGetRestore'
-      displayName: 'NuGet restore packages'
-      inputs:
-          command: 'restore'
-          restoreSolution: '$(solution)'
-          feedsToUse: 'select'
-
-  # In our variables we set our buildConfiguration to release, so we can now use this in our task by calling $(BuildConfiguration).
+  name: 'NuGetRestore'
+  displayName: 'NuGet restore packages'
+  inputs:
+    command: 'restore'
+    restoreSolution: '$(solution)'
+    feedsToUse: 'select'
+ 
 - task: DotNetCoreCLI@2
-      name: 'Tests'
-      displayName: 'Run tests'
-      inputs:
-          command: 'test'
-          projects: '$(solution)'
-          arguments: '--configuration $(BuildConfiguration)'
-
-
-    #The --output parameter tells us where to deploy the application to.
- - task: DotNetCoreCLI@2
-      name: 'Publish'
-      displayName: 'Publish'
-      inputs:
-          command: 'publish'
-          publishWebProjects: false
-          projects: '$(project)'
-          arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
-          zipAfterPublish: false
-
-
-    
+  name: 'Tests'
+  displayName: 'Run tests'
+  inputs:
+    command: 'test'
+    projects: '$(solution)'
+    arguments: '--configuration $(BuildConfiguration)'
+ 
+- task: DotNetCoreCLI@2
+  name: 'Publish'
+  displayName: 'Publish'
+  inputs:
+    command: 'publish'
+    publishWebProjects: false
+    projects: '$(project)'
+    arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+    zipAfterPublish: false
+ 
 - task: PublishBuildArtifacts@1
-      name: 'PublishBuildArtifacts'
-      displayName: 'Publish build artifacts'
-      inputs:
-          PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-          ArtifactName: 'AzureTestProject'
-          publishLocation: 'Container'
-
-
+  name: 'PublishBuildArtifacts'
+  displayName: 'Publish build artifacts'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'AzureTestProject'
+    publishLocation: 'Container'
