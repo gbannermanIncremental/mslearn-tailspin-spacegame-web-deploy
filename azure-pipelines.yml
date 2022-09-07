@@ -41,7 +41,7 @@ stages:
         projects: '$(testProject)'
 
 - stage: Publish
-  dependsOn: Test
+  dependsOn: Build
   displayName: 'Publish the build artifact'
   jobs:
   - job: DotNetPublish
