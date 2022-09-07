@@ -3,63 +3,103 @@ trigger:
  
 pool:
   vmImage: 'windows-latest'
- 
+
 variables:
-  buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
+  dotnetSdkVersion: '6.x'
   solution: '**/Tailspin.SpaceGame.Web.sln'
   project: '**/Tailspin.SpaceGame.Web.csproj'
   testSolution: '**/Tailspin.SpaceGame.Web.UITests.sln'
   testProject: '**/Tailspin.SpaceGame.Web.UITests.csproj'
- 
+
 stages:
-- stage: Build
+- stage: 'Build'
   displayName: 'Build the web application'
-  jobs:
-  - job: Dependencies
-    displayName: 'Install the required dependencies'
-  
+  jobs: 
+  - job: 'Build'
+    displayName: 'Build job'
+    variables:
+      wwwrootDir: 'Tailspin.SpaceGame.Web/wwwroot'
+      dotnetSdkVersion: '6.x'
+
     steps:
-    - task: DotNetCoreCLI@2
-      displayName: dotnet restore
+    - task: UseDotNet@2
+      displayName: 'Use .NET SDK $(dotnetSdkVersion)'
       inputs:
-        command: restore                  ## The dotnet command to run. Options: build, push, pack, restore, run, test, and custom.
-        projects: '$(project)'            ## Path to your csproj file
-        includeNuGetOrg: true  
+        version: '$(dotnetSdkVersion)'
+
+    - task: Npm@1
+      displayName: 'Run npm install'
+      inputs:
+        verbose: false
+
+    - script: './node_modules/.bin/node-sass $(wwwrootDir) --output $(wwwrootDir)'
+      displayName: 'Compile Sass assets'
+
+    - task: gulp@1
+      displayName: 'Run gulp tasks'
+
+    - script: 'echo "$(Build.DefinitionName), $(Build.BuildId), $(Build.BuildNumber)" > buildinfo.txt'
+      displayName: 'Write build info'
+      workingDirectory: $(wwwrootDir)
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Restore project dependencies'
+      inputs:
+        command: 'restore'
+        projects: '$(project)' 
 
     - task: DotNetCoreCLI@2
       displayName: 'Build the project - $(buildConfiguration)'
       inputs:
         command: 'build'
         arguments: '--no-restore --configuration $(buildConfiguration)'
-        projects: '$(project)' 
+        projects: '$(project)'
 
+    - task: DotNetCoreCLI@2
+      displayName: 'Publish the project - $(buildConfiguration)'
+      inputs:
+        command: 'publish'
+        projects: '$(System.DefaultWorkingDirectory)/**/Tailspin.SpaceGame.Web.csproj' 
+        publishWebProjects: false
+        arguments: '--no-build --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/$(buildConfiguration)'
+        zipAfterPublish: true
+
+    - publish: '$(Build.ArtifactStagingDirectory)'
+      artifact: drop
+
+
+- stage: 'Test'
+  displayName: 'Deploy to the test environment'
+  dependsOn: Dev
+  jobs:
+  - deployment: Deploy
+    pool:
+      vmImage: 'windows-latest'
+    environment: test
+    variables:
+    - group: 'Release'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: drop
+
+  - job: RunUITests
+    dependsOn: Deploy
+    displayName: 'Run UI tests'
+    pool:
+      vmImage: 'windows-2019'
+    variables:
+    - group: 'Release'
+    steps: 
+    - task: UseDotNet@2
+      displayName: 'Use .NET SDK $(dotnetSdkVersion)'
+      inputs:
+        version: '$(dotnetSdkVersion)'
     - task: DotNetCoreCLI@2
       displayName: 'Run the build tests'
       inputs:
         command: 'test'
         projects: '$(testProject)'
-
-- stage: Publish
-  dependsOn: Build
-  displayName: 'Publish the build artifact'
-  jobs:
-  - job: DotNetPublish
-    steps:
-    - task: DotNetCoreCLI@2
-      name: 'Publish'
-      displayName: 'Publish'
-      inputs:
-        command: 'publish'
-        publishWebProjects: false
-        projects: '$(project)'
-        arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
-        zipAfterPublish: false
- 
-    - task: PublishBuildArtifacts@1
-      name: 'PublishBuildArtifacts'
-      displayName: 'Publish build artifacts'
-      inputs:
-        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-        ArtifactName: 'AzureTestProject'
-        publishLocation: 'Container'
