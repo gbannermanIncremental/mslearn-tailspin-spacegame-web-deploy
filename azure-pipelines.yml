@@ -62,8 +62,8 @@ stages:
       displayName: 'Run the build tests'
       inputs:
         command: 'test'
-        projects: '$(testSolution)'
         arguments: '--configuration $(BuildConfiguration)'
+        projects: '$(testProject)'
 
 - stage: Publish
   dependsOn: Test
