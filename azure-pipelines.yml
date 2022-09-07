@@ -20,49 +20,24 @@ stages:
     displayName: 'Install the required dependencies'
   
     steps:
-    - task: NuGetToolInstaller@1
-      name: 'NuGetToolInstaller'
-      displayName: 'NuGet tool installer'
- 
-    - task: NuGetCommand@2
-      name: 'NuGetRestore'
-      displayName: 'NuGet restore packages'
+    - task: DotNetCoreCLI@2
+      displayName: dotnet restore
       inputs:
-        command: 'restore'
-        restoreSolution: '$(solution)'
-        feedsToUse: 'select'
+        command: restore                  ## The dotnet command to run. Options: build, push, pack, restore, run, test, and custom.
+        projects: '$(project)'            ## Path to your csproj file
+        includeNuGetOrg: true  
 
     - task: DotNetCoreCLI@2
       displayName: 'Build the project - $(buildConfiguration)'
       inputs:
         command: 'build'
         arguments: '--no-restore --configuration $(buildConfiguration)'
-        projects: '$(project)'
-
-- stage: Test
-  dependsOn: Build
-  displayName: 'Build and run the test project'
-  jobs:
-  - job: TestDependencies
-    steps:
-    - task: NuGetToolInstaller@1
-      name: 'NuGetToolInstaller'
-      displayName: 'NuGet tool installer'
- 
-    - task: NuGetCommand@2
-      name: 'NuGetRestore'
-      displayName: 'NuGet restore packages'
-      inputs:
-        command: 'restore'
-        restoreSolution: '$(testSolution)'
-        feedsToUse: 'select'
+        projects: '$(project)' 
 
     - task: DotNetCoreCLI@2
-      name: 'Tests'
       displayName: 'Run the build tests'
       inputs:
         command: 'test'
-        arguments: '--configuration $(BuildConfiguration)'
         projects: '$(testProject)'
 
 - stage: Publish
