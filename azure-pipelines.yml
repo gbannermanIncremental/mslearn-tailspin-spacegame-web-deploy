@@ -70,7 +70,7 @@ stages:
 
 
 - stage: 'Test'
-  displayName: 'Deploy to the test environment'
+  displayName: 'Deploy to test env & Run UI tests'
   dependsOn: Build
   jobs:
   - deployment: Deploy
@@ -78,13 +78,13 @@ stages:
       vmImage: 'windows-latest'
     environment: test
     variables:
-    - group: 'Release'
+    - group: 'TestEnv'   # this allows acces to SITE_URL
     strategy:
       runOnce:
         deploy:
           steps:
           - download: current
-            artifact: drop
+            artifact: drop    # We are going to download the artifact here but not do anything with it
 
   - job: RunUITests
     dependsOn: Deploy
