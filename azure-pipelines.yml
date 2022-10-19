@@ -83,7 +83,7 @@ stages:
             artifact: drop    # We are going to download the artifact here but not do anything with it
 
   - job: RunUITests
-    dependsOn: Deploy
+    dependsOn: DeployToTest
     displayName: 'Run UI tests'
     pool:
       vmImage: 'windows-2019'
