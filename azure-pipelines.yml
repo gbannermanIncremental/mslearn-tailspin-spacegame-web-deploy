@@ -68,10 +68,10 @@ stages:
       artifact: drop
 
 - stage: 'Test'
-  displayName: 'Deploy to test env & Run UI tests'
+  displayName: 'Deploy to test env & run UI tests'
   dependsOn: Build
   jobs:
-  - deployment: DeployToTest
+  - deployment: DeployWebAppToTest
     pool:
       vmImage: 'windows-latest'
     environment: test
@@ -83,7 +83,7 @@ stages:
             artifact: drop    # We are going to download the artifact here but not do anything with it
 
   - job: RunUITests
-    dependsOn: DeployToTest
+    dependsOn: DeployWebAppToTest
     displayName: 'Run UI tests'
     pool:
       vmImage: 'windows-2019'
