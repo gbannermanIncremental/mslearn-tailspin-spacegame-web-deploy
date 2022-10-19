@@ -71,7 +71,7 @@ stages:
   displayName: 'Deploy to test env & Run UI tests'
   dependsOn: Build
   jobs:
-  - deployment: Deploy to test
+  - deployment: DeployToTest
     pool:
       vmImage: 'windows-latest'
     environment: test
