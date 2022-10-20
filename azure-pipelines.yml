@@ -1,5 +1,5 @@
 trigger:
-- none
+- main
  
 pool:
   vmImage: 'windows-latest'
@@ -79,7 +79,6 @@ stages:
           steps:
           - download: current
             artifact: drop    # We are going to download the artifact here but not do anything with it
-
   - job: RunUITests
     dependsOn: DeployWebAppToTest
     displayName: 'Run UI tests'
@@ -97,3 +96,7 @@ stages:
       inputs:
         command: 'test'
         projects: '$(testProject)'
+    
+    - task: PowerPlatformToolInstaller@2
+      inputs:
+        DefaultVersion: true
