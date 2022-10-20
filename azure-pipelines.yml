@@ -84,8 +84,6 @@ stages:
     displayName: 'Run UI tests'
     pool:
       vmImage: 'windows-2019'
-    variables:
-    - group: 'TestEnv'   # this allows acces to SITE_URL
     steps: 
     - task: UseDotNet@2
       displayName: 'Use .NET SDK $(dotnetSdkVersion)'
