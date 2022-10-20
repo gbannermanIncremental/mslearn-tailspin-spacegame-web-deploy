@@ -97,6 +97,4 @@ stages:
         command: 'test'
         projects: '$(testProject)'
     
-    - task: PowerPlatformToolInstaller@2
-      inputs:
-        DefaultVersion: true
+    
